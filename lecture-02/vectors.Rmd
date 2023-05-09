@@ -1,0 +1,502 @@
+---
+title: "Introduction to R"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+# Sequence Types
+
+1. **Vectors** - Vectors are one-dimensional arrays that can hold a collection of values of the same data type. Here's an example of how to create a vector in R:
+
+```{r}
+# Create a numeric vector
+numeric_vector <- c(1, 2, 3, 4, 5)
+
+# Create a character vector
+character_vector <- c("red", "green", "blue")
+```
+
+2. **Matrices** - Matrices are two-dimensional arrays that can hold a collection of values of the same data type. Here's an example of how to create a matrix in R:
+
+```{r}
+# Create a matrix with 3 rows and 2 columns
+matrix_data <- matrix(c(1, 2, 3, 4, 5, 6), nrow = 3, ncol = 2)
+```
+
+3. **Data frames** - Data frames are two-dimensional structures that can hold a collection of values of different data types. Here's an example of how to create a data frame in R:
+
+```{r}
+# Create a data frame with 3 rows and 2 columns
+data_frame <- data.frame(name = c("John", "Mary", "Bob"),
+                         age = c(25, 30, 35))
+```
+
+In addition to creating these objects, you can also perform various operations on them. Here are some code snippets to illustrate some of the operations you can perform on these objects:
+
+1. **Vectors**
+
+```{r}
+# Accessing elements of a vector
+numeric_vector[1]    # returns 1
+character_vector[2]  # returns "green"
+
+# Adding elements to a vector
+new_numeric_vector <- c(numeric_vector, 6)
+new_character_vector <- c(character_vector, "yellow")
+
+# Finding the length of a vector
+length(numeric_vector)  # returns 5
+length(character_vector)  # returns 3
+
+# Applying functions to a vector
+sum(numeric_vector)  # returns 15
+max(numeric_vector)  # returns 5
+```
+
+2. **Matrices**
+
+```{r}
+# Accessing elements of a matrix
+matrix_data[1, 2]  # returns 2
+
+# Adding elements to a matrix
+new_matrix_data <- rbind(matrix_data, c(7, 8))
+
+# Applying functions to a matrix
+colSums(matrix_data)  # returns a vector of column sums
+rowSums(matrix_data)  # returns a vector of row sums
+```
+
+3. **Data frames**
+
+```{r}
+# Accessing columns of a data frame
+data_frame$name  # returns a vector of names
+data_frame$age   # returns a vector of ages
+
+# Adding columns to a data frame
+data_frame$gender <- c("M", "F", "M")
+
+# Selecting rows of a data frame
+subset_data_frame <- data_frame[data_frame$age > 30, ]
+
+# Applying functions to a data frame
+mean(data_frame$age)   # returns the mean age
+summary(data_frame)    # returns summary statistics for all columns
+```
+
+# Distributions
+
+Among R builtin functions, there are generators for most statistical distributions. These functions return a vector of random values.
+
+1.  **Uniform distribution**: Sample 10 values from a uniform distribution between 0 and 1.
+
+```{r}
+runif(10)
+```
+
+2.  **Normal distribution**: Sample 1000 values from a normal distribution with mean 0 and standard deviation 1.
+
+```{r}
+rnorm(1000)
+```
+
+3.  **Exponential distribution**: Sample 500 values from an exponential distribution with rate parameter 0.5.
+
+```{r}
+rexp(500, rate = 0.5)
+```
+
+4.  **Binomial distribution**: Sample 200 values from a binomial distribution with parameters n = 10 and p = 0.3.
+
+```{r}
+rbinom(200, size = 10, prob = 0.3)
+```
+
+5.  **Poisson distribution**: Sample 300 values from a Poisson distribution with lambda = 3.
+
+```{r}
+rpois(300, lambda = 3)
+```
+
+6.  **Gamma distribution**: Sample 400 values from a gamma distribution with shape parameter 2 and scale parameter 0.5.
+
+```{r}
+rgamma(400, shape = 2, scale = 0.5)
+```
+
+7.  **Beta distribution**: Sample 250 values from a beta distribution with shape parameters alpha = 1 and beta = 3.
+
+```{r}
+rbeta(250, shape1 = 1, shape2 = 3)
+```
+
+# Control flow
+
+Control flow and loops are programming constructs that allow you to execute different code blocks depending on certain conditions or to repeat a block of code a certain number of times.
+
+In R, there are several ways to implement control flow and loops. Some of the most common ones are:
+
+## If-else statements
+
+If-else statements allow you to execute different blocks of code depending on a condition. Here's an example:
+
+```{r}
+# define a function to check if a number is positive or negative
+check_sign <- function(x) {
+  if (x > 0) {
+    print("The number is positive.")
+  } else if (x < 0) {
+    print("The number is negative.")
+  } else {
+    print("The number is zero.")
+  }
+}
+
+# call the function with different arguments
+check_sign(5)
+# output: The number is positive.
+
+check_sign(-2)
+# output: The number is negative.
+
+check_sign(0)
+# output: The number is zero.
+```
+
+In this example, the `check_sign` function takes one argument, `x`, which represents the number to be checked. The function uses an if-else statement to print a message depending on the value of `x`.
+
+## For loops
+
+For loops allow you to repeat a block of code a certain number of times. Here's an example:
+
+```{r}
+# define a function to print the first n even numbers
+print_even_numbers <- function(n) {
+  for (i in 1:n) {
+    print(2*i)
+  }
+}
+
+# call the function with n = 5
+print_even_numbers(5)
+# output: 2 4 6 8 10
+```
+
+In this example, the `print_even_numbers` function takes one argument, `n`, which represents the number of even numbers to be printed. The function uses a for loop to iterate from 1 to `n` and print the corresponding even numbers.
+
+## While loops
+
+While loops allow you to repeat a block of code as long as a certain condition is true. Here's an example:
+
+```{r}
+# define a function to calculate the factorial of a number
+factorial <- function(n) {
+  result <- 1
+  i <- 1
+  
+  while (i <= n) {
+    result <- result * i
+    i <- i + 1
+  }
+  
+  return(result)
+}
+
+# call the function with n = 5
+factorial(5)
+# output: 120
+```
+
+In this example, the `factorial` function takes one argument, `n`, which represents the number whose factorial is to be calculated. The function uses a while loop to calculate the factorial by multiplying the current result by the current value of `i`, which is incremented in each iteration, until `i` reaches `n`.
+
+# Exercises
+
+## If-else
+
+1. Write a function `sign_of_difference` that takes two numbers as arguments and returns "positive" if the difference between them is positive, "negative" if the difference is negative, and "zero" if the difference is zero.
+
+2. Write a function `grade` that takes a numeric score as an argument and returns "A" if the score is greater than or equal to 90, "B" if the score is greater than or equal to 80, "C" if the score is greater than or equal to 70, "D" if the score is greater than or equal to 60, and "F" otherwise.
+
+## For loop
+
+1. Write a function `print_multiples` that takes two numbers as arguments, `n` and `m`, and prints the first `m` multiples of `n`.
+
+2. Write a function `sum_of_squares` that takes a vector of numbers as an argument and returns the sum of the squares of those numbers.
+
+## While loop
+
+1. Write a function `factorial` that takes a positive integer as an argument and returns its factorial.
+
+2. Write a function `even_sum` that returns the sum of all even numbers between 1 and 100 using a while loop.
+
+## Vectors
+
+a. Create a numeric vector with the values 1 through 10. Calculate the sum and mean of the vector.
+
+b. Create two numeric vectors of the same length, and add them together element-wise.
+
+## Matrices
+
+a. Create a 3x3 matrix with the values 1 through 9. Print out the first column of the matrix.
+
+b. Create two matrices of the same size and add them together element-wise.
+
+## Data frames
+
+a. Create a data frame with columns "name" and "age", and add three rows of data. Print out the name and age of the first row.
+
+b. Create two data frames with the same columns and combine them into one data frame.
+
+## Vectors and Matrices
+
+a. Create a 3x3 matrix with random values. Calculate the sum of the values in the first row of the matrix.
+
+b. Create a numeric vector of length 10, and replace every even element with its square.
+
+## Matrices and Data Frames
+
+a. Create a 3x3 matrix with random values, and a data frame with columns "name" and "age". Add a new column to the data frame with the sum of each row of the matrix.
+
+b. Create a 3x3 matrix with random values, and a data frame with columns "name" and "age". Filter the data frame to only include rows where the sum of the corresponding row in the matrix is greater than 10.
+
+# Solutions
+
+## If-else statement solutions
+
+1. Solution for `sign_of_difference`:
+
+```{r}
+sign_of_difference <- function(x, y) {
+  diff <- x - y
+  
+  if (diff > 0) {
+    return("positive")
+  } else if (diff < 0) {
+    return("negative")
+  } else {
+    return("zero")
+  }
+}
+
+# Example usage:
+sign_of_difference(10, 5)
+# Output: "positive"
+sign_of_difference(5, 10)
+# Output: "negative"
+sign_of_difference(5, 5)
+# Output: "zero"
+```
+
+2. Solution for `grade`:
+
+```{r}
+grade <- function(score) {
+  if (score >= 90) {
+    return("A")
+  } else if (score >= 80) {
+    return("B")
+  } else if (score >= 70) {
+    return("C")
+  } else if (score >= 60) {
+    return("D")
+  } else {
+    return("F")
+  }
+}
+
+# Example usage:
+grade(95)
+# Output: "A"
+grade(82)
+# Output: "B"
+grade(75)
+# Output: "C"
+grade(63)
+# Output: "D"
+grade(45)
+# Output: "F"
+```
+
+## For loop solutions
+
+1. Solution for `print_multiples`:
+
+```{r}
+print_multiples <- function(n, m) {
+  for (i in 1:m) {
+    print(n * i)
+  }
+}
+
+# Example usage:
+print_multiples(3, 5)
+# Output:
+# 3
+# 6
+# 9
+# 12
+# 15
+```
+
+2. Solution for `sum_of_squares`:
+
+```{r}
+sum_of_squares <- function(x) {
+  result <- 0
+  
+  for (num in x) {
+    result <- result + num^2
+  }
+  
+  return(result)
+}
+
+# Example usage:
+sum_of_squares(c(2, 3, 4))
+# Output: 29
+```
+
+## While loop solutions
+
+1. Solution for `factorial`:
+
+```{r}
+# Define a function to calculate factorial of a number
+factorial <- function(n) {
+  if (n < 0) {
+    return(NULL)
+  }
+  
+  if (n == 0) {
+    return(1)
+  }
+  
+  result <- 1
+  i <- 1
+  
+  while (i <= n) {
+    result <- result * i
+    i <- i + 1
+  }
+  
+  return(result)
+}
+```
+  
+2. Solution for `even_sum`
+  
+```{r}
+even_sum <- function(A, B) {
+  if (A > B) {
+    temp <- A
+    A <- B
+    B <- temp
+  }
+  
+  i <- A
+  result <- 0
+  
+  while (i <= B) {
+    if (i %% 2 == 0) {
+      result <- result + i
+    }
+    i <- i + 1
+  }
+  
+  return(result)
+}
+```
+
+## Vectors
+
+a. 
+
+```{r}
+vec <- 1:10
+sum(vec)
+mean(vec)
+```
+
+b.  
+
+```{r}
+vec1 <- c(1, 3, 5)
+vec2 <- c(2, 4, 6)
+vec_sum <- vec1 + vec2
+```
+
+## Matrices
+
+a.  
+
+```{r}
+mat <- matrix(1:9, nrow = 3)
+mat[, 1]
+```
+
+b.  
+
+```{r}
+mat1 <- matrix(1:9, nrow = 3)
+mat2 <- matrix(10:18, nrow = 3)
+mat_sum <- mat1 + mat2
+```
+
+## Data frames
+
+a.  
+
+```{r}
+df <- data.frame(name = c("Alice", "Bob", "Charlie"),
+                 age = c(25, 30, 35))
+df[1, c("name", "age")]
+```
+
+b.  
+
+```{r}
+df1 <- data.frame(name = c("Alice", "Bob", "Charlie"),
+                  age = c(25, 30, 35))
+df2 <- data.frame(name = c("Dave", "Eve", "Frank"),
+                  age = c(40, 45, 50))
+df_combined <- rbind(df1, df2)
+```
+
+## Vectors and Matrices
+
+a.  
+
+```{r}
+mat <- matrix(runif(9), nrow = 3)
+row_sum <- sum(mat[1, ])
+```
+
+b.  
+
+```{r}
+vec <- 1:10
+vec[seq(2, 10, by = 2)] <- vec[seq(2, 10, by = 2)]^2
+```
+
+## Matrices and Data Frames
+
+a.  
+
+```{r}
+mat <- matrix(runif(9), nrow = 3)
+df <- data.frame(name = c("Alice", "Bob", "Charlie"),
+                 age = c(25, 30, 35))
+df$sum <- rowSums(mat)
+```
+
+b.  
+
+```{r}
+mat <- matrix(runif(9), nrow = 3)
+df <- data.frame(name = c("Alice", "Bob", "Charlie"),
+                 age = c(25, 30, 35))
+df_filtered <- df[rowSums(mat) > 10, ]
+```
+
