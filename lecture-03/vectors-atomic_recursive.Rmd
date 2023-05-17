@@ -1,0 +1,431 @@
+---
+title: "Atomic and Recursive Vectors (i.e. Vectors/Matrices vs Lists/DataFrames)"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Lecture Outline
+
+* Review of sequence types in R:
+    * vectors and lists
+    * matrices and data.frames
+* Indexing operations with sequences
+* Setting names
+
+The examples will be quite extensive. This is done to show the hierarchy and buildup from scalar datatypes to dataframes and how each one is built on top of another.
+
+## References for the lecture:
+
+* [R for Data Science](https://r4ds.had.co.nz/vectors.html#vectors) chapter 20
+
+# Previous lecture recap
+
+Welcome to the lesson on R datatypes! In this lesson, we'll explore the concept of datatypes in R and how they are used to store and manipulate data. We'll start by looking at atomic datatypes, specifically vectors and matrices. Then, we'll move on to recursive vectors, known as lists, which provide a flexible way to store different types of data.
+
+Every vector has two key properties. Its type, which you can determine with typeof().
+
+```{r}
+typeof(letters)
+#> [1] "character"
+typeof(1:10)
+#> [1] "integer"
+```
+
+Its length, which you can determine with length().
+
+```{r}
+x <- list("a", "b", 1:10)
+length(x)
+#> [1] 3
+```
+
+## Atomic Datatypes: Vectors
+
+Vectors are one-dimensional arrays that can hold elements of the same datatype. In R, vectors can be created using the `c()` function or by specifying a sequence of values. Let's look at an example:
+
+```{r}
+# Create a numeric vector
+x <- c(1, 2, 3, 4, 5)
+x
+```
+
+```{r}
+# Create a character vector
+y <- c("apple", "banana", "orange")
+y
+```
+
+### Indexing Operations
+
+```{r}
+# Create a vector
+my_vector <- c(10, 20, 30, 40, 50)
+
+# Accessing single elements
+my_vector[1] # Access the first element
+my_vector[3] # Access the third element
+
+# Accessing multiple elements
+my_vector[c(2, 4)] # Access the second and fourth elements
+
+# Accessing a range of elements
+my_vector[2:4] # Access elements from the second to the fourth
+
+# Using logical indexing
+my_vector[my_vector > 30] # Access elements greater than 30
+
+# Modifying elements
+my_vector[5] <- 60 # Modify the fifth element
+my_vector
+
+# Assigning new values to selected elements
+my_vector[c(1, 3)] <- c(15, 35) # Assign new values to first and third elements
+my_vector
+```
+
+### Assigning names to vectors
+
+In R, you can name vectors using the `names()` function or by assigning names directly to the vector using the `=` or `<-` assignment operators. Here are three examples of naming vectors in R:
+
+**Example 1: Naming a Vector Using the `names()` Function:**
+
+```{r}
+# Create a vector
+my_vector <- c(10, 20, 30, 40, 50)
+
+# Name the vector using the names() function
+names(my_vector) <- c("A", "B", "C", "D", "E")
+
+# View the named vector
+my_vector
+```
+
+In this example, we create a vector called `my_vector` with values 10, 20, 30, 40, and 50. We use the `names()` function to assign names to the vector elements using the `c()` function. The resulting named vector is displayed as `A  B  C  D  E`, where each element is associated with its respective name.
+
+**Example 2: Naming a Vector by Direct Assignment:**
+
+```{r}
+# Create a vector
+my_vector <- c(10, 20, 30, 40, 50)
+
+# Assign names directly to the vector elements
+my_vector <- c(A = 10, B = 20, C = 30, D = 40, E = 50)
+
+# View the named vector
+my_vector
+```
+
+The resulting named vector is displayed as `A  B  C  D  E`, with each element associated with its respective name. This now makes it possible to index the vector using its names instead:
+
+```{r}
+my_vector["A"]
+
+my_vector[c("A","C")]
+```
+
+**Example 3: Naming a Vector by Indexing:**
+
+```{r}
+# Create a vector
+my_vector <- c(10, 20, 30, 40, 50)
+
+# Index the vector and assign names to specific elements
+my_vector[c(1, 3, 5)] <- c("Apple", "Banana", "Cherry")
+
+# View the named vector
+my_vector
+```
+
+## Atomic Datatypes: Matrices
+
+Matrices are two-dimensional arrays that can hold elements of the same datatype. In R, matrices can be created using the `matrix()` function by specifying the data and the dimensions. Let's see an example:
+
+```{r}
+# Create a matrix
+m <- matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3)
+m
+```
+
+### Indexing operations
+
+```{r}
+# Create a matrix
+my_matrix <- matrix(1:9, nrow = 3, ncol = 3, byrow = TRUE)
+my_matrix
+
+# Accessing single elements
+my_matrix[1, 2] # Access the element in the first row and second column
+my_matrix[3, 3] # Access the element in the third row and third column
+
+# Accessing entire rows or columns
+my_matrix[2, ] # Access the second row
+my_matrix[, 3] # Access the third column
+
+# Accessing multiple elements
+my_matrix[c(1, 3), c(2, 3)] # Access elements in the first and third rows, and second and third columns
+
+# Accessing a range of elements
+my_matrix[1:2, 2:3] # Access elements in the first and second rows, and second and third columns
+
+# Using logical indexing
+my_matrix[my_matrix > 5] # Access elements greater than 5
+
+# Modifying elements
+my_matrix[2, 2] <- 10 # Modify the element in the second row and second column
+my_matrix
+
+# Assigning new values to selected elements
+my_matrix[3, ] <- c(7, 8, 9) # Assign new values to the third row
+my_matrix
+```
+
+In these examples, we create a matrix called my_matrix using the matrix() function with values 1 to 9, arranged in a 3x3 matrix by row. We demonstrate different ways to index and access specific elements, rows, or columns of the matrix. You can access single elements using row and column indices, access entire rows or columns by leaving one index empty, access multiple elements by providing vectors of row and column indices, access a range of elements using the : operator, and use logical indexing to access elements that meet a certain condition. Additionally, we show how to modify individual elements or assign new values to selected elements of the matrix.
+
+### Adding Elements to a Matrix
+
+To add new rows or columns to a matrix in R, you can use the `rbind()` and `cbind()` functions, respectively. Here's how you can add new rows and columns to a matrix:
+
+**Adding New Rows:**
+
+To add new rows to a matrix, you can use the `rbind()` function. Here's an example:
+
+```{r}
+# Create a matrix
+my_matrix <- matrix(1:6, nrow = 2, ncol = 3)
+my_matrix
+
+# Create a new row
+new_row <- c(7, 8, 9)
+
+# Add the new row to the matrix
+updated_matrix <- rbind(my_matrix, new_row)
+updated_matrix
+```
+
+In this example, we first create a matrix called `my_matrix` with 2 rows and 3 columns. Then, we create a new row called `new_row` with values 7, 8, and 9. We use the `rbind()` function to add the new row to the original matrix, resulting in an updated matrix with an additional row.
+
+**Adding New Columns:**
+
+To add new columns to a matrix, you can use the `cbind()` function. Here's an example:
+
+```{r}
+# Create a matrix
+my_matrix <- matrix(1:6, nrow = 2, ncol = 3)
+my_matrix
+
+# Create a new column
+new_column <- c(10, 11)
+
+# Add the new column to the matrix
+updated_matrix <- cbind(my_matrix, new_column)
+updated_matrix
+```
+
+### Naming matrix dimensions
+
+In R, you can set names for the rows and columns of a matrix using the `rownames()` and `colnames()` functions, respectively. Once the matrix is named, you can index it using the names. Here's an example:
+
+```{r}
+# Create a matrix
+my_matrix <- matrix(1:6, nrow = 2, ncol = 3)
+
+# Set row and column names
+rownames(my_matrix) <- c("Row1", "Row2")
+colnames(my_matrix) <- c("Col1", "Col2", "Col3")
+
+# View the named matrix
+my_matrix
+```
+
+In this example, we create a matrix called `my_matrix` using the `matrix()` function with values 1 to 6 and dimensions 2 rows by 3 columns. We then use the `rownames()` and `colnames()` functions to assign names to the rows and columns, respectively. The resulting matrix is displayed with row names "Row1" and "Row2" and column names "Col1", "Col2", and "Col3".
+
+To index a matrix using its row and column names, you can use the names within square brackets `[]`. Here's an example:
+
+```{r}
+# Accessing elements using row and column names
+my_matrix["Row1", "Col2"]  # Access the element in the first row and second column
+
+# Accessing entire rows or columns using names
+my_matrix["Row2", ]  # Access the second row
+my_matrix[, "Col3"]  # Access the third column
+```
+
+By setting names for the rows and columns of a matrix, you can easily refer to specific elements using the names instead of numerical indices. This can make your code more readable and easier to understand when working with matrices in R.
+
+## Recursive Vectors: Lists
+
+Lists are a type of data structure in R that can store elements of different types and lengths. Unlike vectors, which can only hold elements of the same data type, lists provide flexibility in organizing and storing heterogeneous data. Each element in a list is referred to as a component and can be of any R object, including vectors, matrices, data frames, or even other lists.
+
+**Example of Creating a List:**
+
+Let's see an example of creating a list in R:
+
+```{r}
+# Create a list
+my_list <- list(name = "John", age = 30, hobbies = c("reading", "painting"))
+my_list
+```
+
+In this example, we create a list called `my_list`. It contains three components: `name`, `age`, and `hobbies`. The `name` component is a character vector, the `age` component is a numeric value, and the `hobbies` component is a character vector.
+
+**Why Use Lists Instead of Vectors?**
+
+There are several reasons why one might want to use a list instead of a vector:
+
+1. **Different Datatypes**: Lists allow you to store elements of different data types within a single object. This flexibility is particularly useful when working with datasets that have multiple variables of varying types, such as character, numeric, or logical data.
+
+2. **Different Lengths**: Lists can store elements of different lengths. This is beneficial when working with data where the length of variables varies, such as storing different-sized vectors or matrices as components of a list.
+
+3. **Complex Data Structures**: Lists can store complex data structures like data frames, matrices, or even other lists as components. This makes lists a versatile data structure for organizing and manipulating complex data with nested structures.
+
+4. **Named Components**: Lists allow you to assign names to individual components, providing a convenient way to access and manipulate specific elements within the list.
+
+5. **Flexibility in Manipulation**: Lists provide flexibility in manipulating data. You can easily add or remove components, modify individual components, or perform operations on specific elements within the list.
+
+Overall, lists provide a flexible and powerful way to organize and store heterogeneous data in R. They are particularly useful when dealing with complex datasets that contain variables of different types and lengths, as well as when working with nested or hierarchical data structures.
+
+### Indexing operations
+
+There are three ways to index a list. The dollar sign `$`, the single bracket `[ ]`, and the double brackets `[[ ]]` are indexing operators used to access components or elements within a list in R. However, they have some differences in terms of their behavior and the type of output they produce.
+
+Here's an explanation of the differences between these indexing operators:
+
+**$ Operator:**
+
+The `$` operator is used to access components within a list by specifying the component name directly. It is a convenient way to access components when you know their names. The `$` operator returns the value of the component as its output. Here's an example:
+
+```{r}
+# Create a list
+my_list <- list(name = "John", age = 30, hobbies = c("reading", "painting"))
+
+# Accessing components using $
+my_list$name     # Access the component named "name"
+my_list$age      # Access the component named "age"
+my_list$hobbies  # Access the component named "hobbies"
+```
+
+The `$` operator is straightforward to use and provides direct access to components by their names. It is especially useful when working with named lists.
+
+**[ ] Operator:**
+
+The single bracket `[ ]` operator is used for both subsetting and indexing. It can be used to access components or elements within a list based on their position or name. When used with numerical indices, it returns a sub-list containing the specified components or elements. When used with character indices or names, it returns the corresponding component or element value. Here's an example:
+
+```{r}
+# Accessing components using [ ]
+my_list[1]             # Access the first component as a sub-list
+my_list[c(1, 3)]       # Access the first and third components as a sub-list
+my_list["name"]        # Access the component named "name" directly
+my_list[c("name", "age")]  # Access components by their names as a sub-list
+```
+
+The `[ ]` operator provides more flexibility as it allows you to access components or elements based on their position or name. It returns a list or vector depending on the indexing method used.
+
+**[[ ]] Operator:**
+
+The double brackets `[[ ]]` operator is used for extracting a single component or element from a list. It is specifically used for extraction and cannot be used to subset multiple components simultaneously. The `[[ ]]` operator returns the value of the component or element directly, rather than returning a sub-list or sub-vector. Here's an example:
+
+```{r}
+# Accessing components using [[ ]]
+my_list[[1]]           # Access the first component directly
+my_list[["name"]]      # Access the component named "name" directly
+my_list$hobbies[[2]]   # Access the second element within the "hobbies" component directly
+```
+
+The `[[ ]]` operator is handy when you need to access a specific component or element within a list and want the value itself rather than a sub-list or sub-vector.
+
+To summarize, the `$` operator is used to access components by their names, the `[ ]` operator is used for subsetting and indexing based on positions or names, and the `[[ ]]` operator is used for direct extraction of a single component or element by its position or name. The choice of which operator to use depends on the specific indexing needs and the desired output.
+
+```{r}
+# Create a list
+my_list <- list(name = "John", age = 30, hobbies = c("reading", "painting"))
+
+# Accessing single components
+my_list$name  # Access the component named "name"
+my_list[2]    # Access the second component
+
+# Accessing components using $
+my_list$name  # Access the component named "name"
+my_list$age   # Access the component named "age"
+
+# Accessing components using [[ ]]
+my_list[["name"]]      # Access the component named "name"
+my_list[["hobbies"]]   # Access the component named "hobbies"
+
+# Accessing components using $
+my_list[[1]]  # Access the first component
+my_list[[3]]  # Access the third component
+
+# Accessing elements within components
+my_list$hobbies[2]     # Access the second element within the "hobbies" component
+my_list[["hobbies"]][1] # Access the first element within the "hobbies" component
+```
+
+In these examples, we create a list called `my_list` with three components: `name`, `age`, and `hobbies`. We demonstrate different ways to index and access specific components or elements within the list.
+
+You can access single components by using the `$` operator followed by the component name or by using double brackets `[[ ]]` with the component name as a character string. If you prefer accessing components by their numerical position, you can use single brackets `[ ]` with the position index. Furthermore, you can access elements within components by combining indexing techniques.
+
+## Recursive vectors: DataFrames
+
+A DataFrame is a two-dimensional data structure in R that is similar to a table or spreadsheet. It is a widely used data structure for handling structured and tabular data. A DataFrame can store data of different types, such as numeric, character, factor, or logical, within columns. It provides a convenient way to organize, manipulate, and analyze data in R.
+
+Here are some key characteristics and differences between a DataFrame and a List:
+
+**Structure:**
+
+- **DataFrame:** A DataFrame is a rectangular data structure with rows and columns, similar to a table. It consists of a collection of vectors, each representing a column, and each column must have the same length. The columns are typically named, allowing easy identification and access to specific variables.
+
+- **List:** A List is a versatile data structure that can store elements of different types and lengths. It can contain vectors, matrices, data frames, or even other lists as its components. The components of a list can have different lengths and may not necessarily follow a rectangular structure.
+
+**Data Organization:**
+
+- **DataFrame:** DataFrames are designed to organize structured and tabular data, where each column represents a variable or attribute, and each row represents an observation or case. It is commonly used for datasets with multiple variables and observations, making it suitable for data analysis, manipulation, and modeling tasks.
+
+- **List:** Lists are more flexible and can organize data of various types and structures. While lists can also be used to store tabular data, they provide a more general-purpose way of organizing and storing heterogeneous data. Lists are particularly useful when dealing with complex or nested data structures, where components can be of different types and lengths.
+
+**Accessing Data:**
+
+- **DataFrame:** DataFrames provide convenient methods for accessing and manipulating data within columns. Columns in a DataFrame can be accessed using the `$` operator or by using the `[ ]` operator with column names. Additionally, rows can be accessed by numerical indexing or using logical conditions.
+
+- **List:** Accessing data within a list is more flexible but requires more explicit indexing. Components within a list can be accessed using the `$` operator, the `[ ]` operator, or the `[[ ]]` operator with component names or numerical indices. Data within components can be further accessed using indexing within the respective component.
+
+**Functionality:**
+
+- **DataFrame:** DataFrames offer a range of built-in functions and methods specifically designed for data manipulation and analysis. They support operations like filtering, subsetting, merging, reshaping, and applying functions across columns or rows. DataFrames also have integration with many statistical and machine learning packages in R.
+
+- **List:** Lists provide flexibility in storing and manipulating data, but they lack the specialized functions and methods that are built-in for DataFrames. While you can perform similar operations on a list, you may need to write custom code or use general-purpose functions to achieve the desired functionality.
+
+In summary, a DataFrame is a two-dimensional data structure primarily used for organizing structured and tabular data, while a List is a more flexible data structure that can handle heterogeneous and nested data of varying lengths and types. DataFrames are tailored for data analysis tasks, with specialized functions and methods, while Lists provide versatility in handling complex data structures. The choice between using a DataFrame or a List depends on the nature of the data and the specific tasks you want to perform.
+
+### Indexing DataFrames
+
+```{r}
+# Create vectors
+names <- c("John", "Jane", "Michael")
+age <- c(25, 30, 35)
+city <- c("New York", "London", "Paris")
+
+# Create DataFrame from vectors
+df <- data.frame(Name = names, Age = age, City = city)
+
+# View the DataFrame
+df
+```
+
+In this example, we create three vectors: `names`, `age`, and `city`. We then use the `data.frame()` function to create a DataFrame called `df` by combining these vectors. The column names are specified using the `Name`, `Age`, and `City` arguments of the `data.frame()` function. Finally, we view the resulting DataFrame.
+
+```{r}
+# Accessing columns
+df$Name     # Access the column "Name"
+df[, "Age"] # Access the column "Age"
+
+# Accessing rows
+df[2, ]     # Access the second row
+df[1:2, ]   # Access the first two rows
+
+# Accessing specific elements
+df[2, "Name"]   # Access the element in the second row and "Name" column
+df$Age[3]      # Access the element in the third row of the "Age" column
+```
+
+You can access columns by using the `$` operator followed by the column name or by using the `[ ]` operator with the column name inside quotes. To access rows, you can use the `[ ]` operator with numerical indices or leave the column index empty to select all columns. Furthermore, you can access specific elements by combining indexing techniques.
