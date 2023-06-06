@@ -1,5 +1,5 @@
 ---
-title: "Atomic and Recursive Vectors (i.e. Vectors/Matrices vs Lists/DataFrames)"
+title: "Introduction to R - Complex Vector Types"
 output: html_notebook
 editor_options: 
   chunk_output_type: inline

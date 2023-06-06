@@ -1,5 +1,5 @@
 ---
-title: "Introduction to R"
+title: "Introduction to R - Atomic Vector Types"
 output: html_notebook
 editor_options: 
   chunk_output_type: console

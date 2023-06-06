@@ -2,7 +2,7 @@
 title: "Introduction to R"
 output: html_notebook
 editor_options: 
- chunk_output_type: console
+  chunk_output_type: console
 ---
 
 # The R Console
