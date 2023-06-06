@@ -1,0 +1,11 @@
+---
+title: "Time Series Analysis"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
