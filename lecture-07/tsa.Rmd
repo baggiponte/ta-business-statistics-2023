@@ -2,7 +2,7 @@
 title: "Time Series Analysis"
 output: html_notebook
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r}
