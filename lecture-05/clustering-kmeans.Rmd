@@ -1,11 +1,363 @@
 ---
-title: "Clustering - KMeans"
+title: "Cluster Analysis - KMeans"
 output: html_notebook
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
-```{r}
-library(tidyverse)
+# Import libraries
+
+```{r setup, echo=FALSE, warning=FALSE}
+# data
 library(palmerpenguins)
+
+# data manipulation
+library(tidyverse)
+library(patchwork)          # just an extra
+
+theme_set(theme_minimal())  # use a decent theme
+
+# clustering
+library(cluster)            # for silhouette
+library(factoextra)         # viz and cluster selection
+library(fpc)                # other clustering metrics
+
+set.seed(42)                # reproducibility
+```
+
+# Data Exploration
+
+For simplicity, we remove missing values.
+
+```{r eda-facet}
+penguins %>%
+  drop_na() %>% 
+  ggplot(aes(x=bill_length_mm, y=bill_depth_mm, col=sex, alpha=body_mass_g)) +
+  geom_point() +
+  facet_grid(vars(island), vars(species)) +
+  theme(legend.position = "bottom")
+```
+
+```{r eda-patchwork}
+by_species <- penguins %>%
+  drop_na() %>% 
+  ggplot(aes(x=bill_length_mm, y=bill_depth_mm, col=sex, alpha=body_mass_g)) +
+  geom_point() +
+  facet_wrap(vars(species)) +
+  labs(x=NULL, y=NULL)
+
+by_island <- penguins %>%
+  drop_na() %>% 
+  ggplot(aes(x=bill_length_mm, y=bill_depth_mm, col=sex, alpha=body_mass_g)) +
+  geom_point() +
+  facet_wrap(vars(island)) +
+  labs(x=NULL, y=NULL)
+
+by_species + by_island +
+  plot_annotation(
+    title="Penguins: Bill Length vs Bill Depth",
+    subtitle="By species (left) and by island (right)",
+    ) +
+  plot_layout(guides="collect") &
+  theme(legend.position = "bottom")
+```
+
+# Data Preparation
+
+Before applying K-Means clustering, two preprocessing steps are necessary:
+
+## Deal with categorical columns
+
+K-Means clustering algorithm is primarily designed to work with quantitative variables rather than categorical variables. The algorithm calculates distances between data points based on numerical values, making it less suitable for categorical data. However, there are ways to convert categorical variables into numerical ones to use K-Means clustering, though it comes with some caveats.
+
+- Loss of Information: Converting categorical variables into numerical ones involves assigning arbitrary numerical codes or dummy variables. This process may result in the loss of the inherent order or relationships between categories.
+- Incorrect Interpretation: Numeric codes assigned to categorical variables can lead to a misleading interpretation. K-Means assumes a linear relationship between variables, which may not hold true for categorical variables.
+- Distorted Distance Metrics: Converting categorical variables into numerical ones may create artificial distances that do not reflect the true dissimilarity between categories. This can lead to biased clustering results.
+
+Let's make a concrete example. We could encode the penguin species as a dummy variable, by mapping Gentoo to 0, Adelie to 1 and Chinstrap to 2. This, however, makes some crucial assumptions:
+
+* Ordering: with this encoding, we are saying that there is an order between species that might not respect the true order - or there might be no order at all.
+* Cardinality: even if the order is correct, the distance between points is always 1. This does not always hold. In time series data, we might encode the day of the week with a sequence from 0 to 6, or the month as a sequence from 0 to 11: while this is indeed the correct order, no one guarantees that the distance between each point is 1. For example, the distance between a Friday and a Saturday is not the same as Sunday and Monday, or Tuesday and Wednesday. 
+
+### Handling categorical variables: dummy coding
+
+Dummy coding creates binary dummy variables for each category of the categorical variable. Each category is represented by a 0 or 1, indicating its absence or presence, respectively. However, this can lead to a high-dimensional feature space and the "curse of dimensionality" problem.
+
+With dummy coding (also known as one-hot encoding), a categorical column with K levels becomes K-1 columns that contain a 0 or 1. When K is big, this can make the feature space too sparse.
+
+For example, sometimes in time series analysis we can consider the day of the week and the month as categorical features. One-hot encoding the day of the week returns 6 columns, while encoding the month will return 11 columns. In we did so, we would add 17 columns to our dataset.
+
+### Ordinal Encoding:
+
+Ordinal encoding assigns numerical codes to categories based on their order or meaningful ranking. This method preserves the order or ranking information but assumes equal intervals between categories. In other words, a "day of the week" column becomes a single column ranging from 0 to 6.
+
+#### Other strategies
+
+- Frequency Encoding. Replace categories with their frequency of occurrence in the dataset. This approach captures the relative importance of each category but treats them as continuous variables.
+- Target Encoding. Encode categories based on the target variable's mean or other statistics. This method introduces the target variable's information into the encoding process but can be prone to overfitting.
+
+It's important to note that even with these approaches, the resulting numerical representation of categorical variables may not fully capture the true nature of the data. Other clustering algorithms, such as k-modes or k-prototypes, are specifically designed for categorical data and may provide better results for clustering categorical variables.
+
+## Scale data.
+
+Scaling data is important when performing clustering for two chief reasons:
+
+1. Equalizing Variable Importance: Clustering algorithms often rely on distance-based metrics, such as Euclidean distance, to measure the similarity between data points. Variables with larger scales or larger variances can dominate the clustering process and have a disproportionate influence on the results. Scaling the data ensures that all variables contribute equally to the clustering process, preventing any single variable from overpowering the others.
+
+2. Resolving Unit Discrepancies: When the variables in the dataset have different units or scales, clustering algorithms may incorrectly assign higher weight to variables with larger values or scales. Scaling the data eliminates these unit discrepancies, allowing for a fair comparison and clustering based on the inherent patterns and structures in the data.
+
+
+```{r data-prep}
+data <- penguins %>% 
+  drop_na() %>% 
+  select(where(is.numeric), -year) %>% 
+  # not needed, can simply write `%>% scale()`
+  mutate(across(everything(), ~scale(.x) %>% as.vector()))
+
+data %>% head()
+```
+
+# Your first KMeans model
+
+We choose an arbitraty number of clusters, here 3.
+
+```{r kmeans}
+kmeans_model <- data %>% kmeans(centers=3)
+kmeans_model
+```
+
+The `kmeans` function returns an object (basically, a `list`!) with several **attributes**.
+
+1. `cluster`: This object contains the cluster assignments for each observation in your dataset. It is a vector that indicates which cluster each data point belongs to.
+
+```{r kmeans-attr-cluster}
+kmeans_model$cluster
+```
+
+2. `centers`: This object contains the centroid coordinates for each cluster. It is a matrix where each row represents a cluster and each column represents a variable in your dataset. The centroid coordinates represent the mean values of the variables within each cluster.
+
+```{r kmeans-attr-centers}
+kmeans_model$centers
+```
+
+3. `totss`: This object represents the total sum of squares (TSS), which is the sum of squared distances between each data point and the overall centroid of the data. It measures the total variability in the dataset.
+
+```{r kmeans-attr-totss}
+kmeans_model$totss
+```
+
+5. `withinss`: This object is a numeric vector that contains the within-cluster sum of squares (WCSS) for each cluster. It represents the sum of squared distances between each data point and its centroid within the cluster.
+
+```{r kmeans-attr-withinss}
+kmeans_model$withinss
+```
+
+4. `tot.withinss`: This object represents the total within-cluster sum of squares (WCSS), which is a measure of how compact the clusters are. It indicates the sum of squared distances between each data point and its centroid within the assigned cluster. Computed as `sum(withinss)`
+
+```{r kmeans-attr-withinss}
+kmeans_model$tot.withinss
+```
+
+6. `betweenss`: This object represents the between-cluster sum of squares (BCSS), which is the sum of squared distances between the cluster centroids and the overall centroid of the data. It measures the separation between clusters. Computed as `totss - tot.withinss`.
+
+```{r kmeans-attr-betwenss}
+kmeans_model$betweenss
+```
+
+7. `size`: The number of points in each cluster.
+
+```{r kmeans-attr-size}
+kmeans_model$size
+```
+
+8. `iter`: This object represents the number of iterations required for the K-Means algorithm to converge and find the final cluster assignments.
+
+```{r kmeans-attr-iter}
+kmeans_model$iter
+```
+
+9. `ifault`: This object is an integer code that indicates the convergence status of the K-Means algorithm. It can take the following values:
+   - 0: Convergence was achieved (the algorithm successfully assigned all data points to clusters).
+   - 1: The algorithm reached the maximum number of iterations without converging.
+   - 2: Some of the clusters became empty (no data points were assigned to them).
+   - 3: The algorithm encountered numerical difficulties (e.g., due to floating-point overflow or underflow).
+   
+```{r kmeans-attr-ifault}
+kmeans_model$ifault
+```
+  
+# Visualise clustering results
+
+```{r kmeans-visualisation}
+mass_v_bill_length <- kmeans_model %>% 
+  fviz_cluster(
+    data=data,
+    choose.vars = c("body_mass_g", "bill_length_mm"),
+    ggtheme=theme_minimal()
+  ) + labs(x=NULL, y=NULL, title=NULL)
+
+mass_vs_bill_depth <- kmeans_model %>% 
+  fviz_cluster(
+    data=data,
+    choose.vars = c("body_mass_g", "bill_depth_mm"),
+    ggtheme=theme_minimal()
+  ) + labs(x=NULL, y=NULL, title=NULL)
+
+mass_v_bill_length + mass_vs_bill_depth + 
+  plot_annotation(
+    title="Clustering: Mass vs Bill Length (left) and Bill Depth (right)",
+    ) +
+  plot_layout(guides="collect") &
+  theme(legend.position = "bottom")
+```
+
+How shall we interpret these results? The plot on the left might induce you to think three clusters are indeed the ideal number. On the other hand, the plot on the right displays significant overlap across two groups.
+
+Indeed, we would have to make this eye-ball comparison across all possible combination of variables. We used 4; however, we cannot do this when the number of variables becomes 8 or 10. Besides, this is not a sound way to assert statistical properties in the data. For this reason, we resort to other evaluation criteria.
+
+# Clustering evaluation criteria
+
+Evaluation metrics play a crucial role in assessing the quality and performance of clustering algorithms. By far the most common ones are the within-cluster sum of squares and between-cluster sum of squares. However, these two comes with significant caveats, so we will mention other ones: gap statistic, silhouette statistic, and Calinski-Harabazs score.
+
+## 1. Inertia/Within-cluster sum of squares
+
+Inertia, also known as within-cluster sum of squares (WCSS or WSS), measures the compactness of clusters. It calculates the sum of squared distances between each data point and its centroid within the assigned cluster. **Lower values of inertia indicate more compact and well-separated clusters**.
+
+In other words, the lower the better. **However, inertia decreases monotonically, so the more clusters there are and the lower the score**.
+
+```{r inertia}
+inertia <- kmeans_model$tot.withinss
+```
+
+## 2. Between cluster sum of squares
+
+It is a measure that quantifies the separation or dispersion between clusters in a clustering algorithm. The BSS is computed as the sum of squared distances between the cluster centroids and the overall centroid of the data. The higher it is, the better. However, the same caveat for WSS applies here: BSS increases monotonically, so beware.
+
+```{r bss}
+bss <- kmeans_model$betweenss
+```
+
+## 3. Calinski-Harabazs score
+
+The Calinski-Harabasz index, also known as the variance ratio criterion, measures the ratio of between-cluster dispersion to within-cluster dispersion. It evaluates the compactness of clusters and the separation between them. Higher values of the Calinski-Harabasz index indicate better-defined clusters.
+
+```{r calinski-harabazs}
+cluster_labels <- kmeans_model$cluster
+
+ch <- fpc::calinhara(data, cluster_labels, 3)
+```
+
+## 4. Silhouette Score
+The silhouette score quantifies the quality of clustering by considering both the cohesion within clusters and the separation between clusters. It measures how similar an observation is to its own cluster compared to other clusters. **The silhouette score ranges from -1 to 1, where higher values indicate better-defined clusters.**
+
+Natively, is not really nice to compute with R:
+
+```{r silhouette-score}
+cluster_labels <- kmeans_model$cluster
+
+# Compute silhouette score
+sil <- silhouette(cluster_labels, dist(data))
+```
+
+The result is quite pleasant to display with `factoextra::fviz_silhouette`, though:
+
+```{r vis-silhouette}
+fviz_silhouette(sil)
+```
+
+To retrieve the metric itself, we need to compute the mean of the third column, `sil_width`:
+
+```{r compute-silhouette}
+sil_score <- sil[, 3] %>% mean()
+sil_score
+```
+
+## 5. Gap statistic
+
+The gap statistic has a more technical definition: the algorithm compares the within-cluster dispersion of the data with the expected dispersion if the data came from a uniform distribution (this is done via *bootstrapping*, a technique to simulate data).
+
+In other words, the gap statistics attempts to identify the point at which the clustering structure becomes meaningful. Typically, the optimal number of clusters is determined when the Gap statistic exhibits a significant increase and then levels off or starts to decrease.
+
+This function is slightly different from the others in that it accepts a `K.max` parameter and computes the gap statistics for all clusters in the range `2:K.max`. In other words, it returns a vector of metrics.
+
+```{r}
+result <- data %>% cluster::clusGap(FUNcluster=kmeans, K.max=10)
+
+gap_stats <- result$Tab[, "gap"]
+```
+
+# Manual K selection
+
+Now that we know the metrics to evaluate our model against, we can write a for loop to iterate through a desired range of clusters.
+
+We set `NUM_CLUSTERS`, which represents the max number of clusters of the range we would like to inspect. Then, to save up time, we compute the `distance` to compute the silhouette score.
+
+We create 4 empty vectors of length `NUM_CLUSTERS` that will hold the scores: `wss`, `bss`, `sil` and `ch`.
+
+Then we iterate over the range `2:NUM_CLUSTERS`: for each loop, we fit a K-Means model with `k` clusters (first 2, then 3, 4... up to `NUM_CLUSTERS`). For each iteration, we store the evaluation metric we are interested in.
+
+Finally, we put all the vectors in a single `tibble` or `data.frame` object.
+
+We make the `wss` negative so that we can read all of these metrics as "the higher the better" (whereas the interpretation of the gap statistic is less straightforward).
+
+```{r}
+NUM_CLUSTERS <- 10L
+
+# we compute the distance here to avoid recomputing it every time
+distance <- dist(data)
+
+# generate an empty data.frame/tibble with this many cols and rows
+
+wss = vector(length=NUM_CLUSTERS)
+bss = vector(length=NUM_CLUSTERS)
+sil = vector(length=NUM_CLUSTERS)
+ch = vector(length=NUM_CLUSTERS)
+
+
+for (k in 2:NUM_CLUSTERS) { # it does not make sense to use K < 2
+  kmeans_result <- data %>% kmeans(centers=k)
+  kmeans_labels <- kmeans_result$cluster
+  
+  wss[k] = -kmeans_result$tot.withinss
+  bss[k] = kmeans_result$betweenss
+  sil[k] = silhouette(kmeans_labels, distance)[, 3] %>% mean()
+  ch[k] = fpc::calinhara(data, kmeans_labels, k)
+}
+
+metrics <- tibble(
+  num_clusters = 1:NUM_CLUSTERS,
+  wss = wss,
+  bss = bss,
+  sil = sil,
+  ch = ch,
+  gap_stat = cluster::clusGap(x=data, FUNcluster=kmeans, K.max=NUM_CLUSTERS)$Tab[, "gap"]
+)
+```
+
+And we can display the results:
+
+```{r}
+metrics %>%
+  pivot_longer(cols=!num_clusters, names_to="metric", values_to="value") %>% 
+  ggplot(aes(x=num_clusters, y=value, col=metric)) +
+  geom_line() +
+  facet_wrap(~metric,ncol = 1, scale="free_y") +
+  labs(x="Number of clusters") +
+  theme(legend.position = "bottom")
+```
+
+While it is nice to know what happens under the hood, it is quite complex. Of course, there are plenty of libraries that do this for us, such as `factoextra`.
+
+# Automatic K Selection
+
+```{r}
+fviz_nbclust(data, kmeans, method="silhouette", k.max = NUM_CLUSTERS)
+```
+
+```{r}
+fviz_nbclust(data, kmeans, method="wss", k.max = NUM_CLUSTERS)
+```
+  
+```{r}
+fviz_nbclust(data, kmeans, method="gap_stat", k.max = NUM_CLUSTERS)
 ```
