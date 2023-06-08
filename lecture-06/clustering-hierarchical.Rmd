@@ -155,11 +155,10 @@ nbclust_centroids <- data %>%
     distance="euclidean",
     min.nc = 2,
     max.nc = 10,
-    method = "centroids",
+    method = "centroid",
     index="all"
     )
 ```
-
 
 We can also run `NbClust` with the `kmeans` algorithm:
 

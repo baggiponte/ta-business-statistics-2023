@@ -87,7 +87,7 @@ With dummy coding (also known as one-hot encoding), a categorical column with K 
 
 For example, sometimes in time series analysis we can consider the day of the week and the month as categorical features. One-hot encoding the day of the week returns 6 columns, while encoding the month will return 11 columns. In we did so, we would add 17 columns to our dataset.
 
-### Ordinal Encoding:
+### Ordinal Encoding
 
 Ordinal encoding assigns numerical codes to categories based on their order or meaningful ranking. This method preserves the order or ranking information but assumes equal intervals between categories. In other words, a "day of the week" column becomes a single column ranging from 0 to 6.
 
@@ -98,7 +98,7 @@ Ordinal encoding assigns numerical codes to categories based on their order or m
 
 It's important to note that even with these approaches, the resulting numerical representation of categorical variables may not fully capture the true nature of the data. Other clustering algorithms, such as k-modes or k-prototypes, are specifically designed for categorical data and may provide better results for clustering categorical variables.
 
-## Scale data.
+## Scale data
 
 Scaling data is important when performing clustering for two chief reasons:
 
