@@ -119,7 +119,7 @@ data %>% head()
 
 # Your first KMeans model
 
-We choose an arbitraty number of clusters, here 3.
+We choose an arbitrary number of clusters, here 3.
 
 ```{r kmeans}
 kmeans_model <- data %>% kmeans(centers=3)
