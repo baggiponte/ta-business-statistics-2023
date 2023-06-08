@@ -180,6 +180,16 @@
       ],
       "Hash": "963ab8fbaf980a5b081ed40419081439"
     },
+    "NbClust": {
+      "Package": "NbClust",
+      "Version": "3.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "e56c312f8636aace4c6ed1082df79ab9"
+    },
     "PMCMRplus": {
       "Package": "PMCMRplus",
       "Version": "1.9.6",
