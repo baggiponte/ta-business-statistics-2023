@@ -5,7 +5,171 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r}
+# Libraries
+
+```{r setup echo=FALSE, warning=FALSE}
 library(tidyverse)
 library(palmerpenguins)
+
+library(factoextra)
+library(NbClust)
+
+theme_set(theme_minimal())
+
+set.seed(42)
+```
+
+# Data preparation
+
+The same as the previous lecture.
+
+```{r}
+data <- penguins %>% 
+  drop_na() %>% 
+  select(where(is.numeric), -year) %>% 
+  # not needed, can simply write `%>% scale()`
+  mutate(across(everything(), ~scale(.x) %>% as.vector()))
+
+data %>% head()
+```
+
+# Computing distances
+
+With base R function, we need to compute first a distance matrix:
+
+```{r}
+distance <- data %>% dist()
+```
+
+## Other distance measures
+
+There are plenty of [distance measures](https://www.datanovia.com/en/lessons/clustering-distance-measures/) to use for clustering. The built-in `dist` method can compute "euclidean", "maximum", "manhattan", "canberra", "binary" or "minkowski" distances. The `get_dist()` method in `factoextra` also offers the correlation-based measures "pearson", "spearman" or "kendall".
+
+You can visualise distances with `factoextra::fviz_dist` - though it becomes quite hard to read if the number of points exceeds a relatively small threshold.
+
+```{r}
+fviz_dist(distance)
+```
+
+# Fitting the algorithm
+
+Then we can use this distance matrix to fit the hierarchical clustering models:
+
+```{r}
+distance %>% 
+  hclust(method="single")
+```
+
+We can visualise this result as a dendrogram with the built-in `plot` method:
+
+```{r}
+distance %>% 
+  hclust(method="single") %>% 
+  plot()
+```
+
+Though, as per with the distance plot, it quickly becomes hard to read the more points there are. The `cutree` method in base R can be applied to the result of hierarchical clustering to return the labels of the groups each data point is assigned to.
+
+```{r}
+distance %>% 
+  hclust(method="single") %>% 
+  cutree(k=4) # or we can specify the height `h`
+```
+
+With `factoextra`, we can `cut` the dendrogram at a certain height. This cut highlights all points that end up in the same cluster, providing a quick way to inspect their number.
+
+```{r}
+hclust_single <- distance %>% 
+  hclust(method="single")
+
+hclust_single %>% 
+  fviz_dend(k=6)
+```
+
+# Different linkages
+
+```{r}
+hclust_complete <- distance %>% 
+  hclust(method="complete")
+
+hclust_complete %>% 
+  fviz_dend(k=6)
+```
+
+```{r}
+hclust_avg <- distance %>% 
+  hclust(method="average")
+
+hclust_avg %>% 
+  fviz_dend(k=6)
+```
+
+```{r}
+hclust_centroid <- distance %>% 
+  hclust(method="centroid")
+
+hclust_centroid %>% 
+  fviz_dend(k=6)
+```
+
+# Determining the optimal number of clusters
+
+```{r}
+nbclust_single <- data %>% 
+  NbClust(
+    distance="euclidean",
+    min.nc = 2,
+    max.nc = 10,
+    method = "single",
+    index="all"
+    )
+
+# fviz_nbclust(nbclust_single) # should work, actually errors!
+```
+
+```{r}
+nbclust_comp <- data %>% 
+  NbClust(
+    distance="euclidean",
+    min.nc = 2,
+    max.nc = 10,
+    method = "complete",
+    index="all"
+    )
+```
+
+```{r}
+nbclust_avg <- data %>% 
+  NbClust(
+    distance="euclidean",
+    min.nc = 2,
+    max.nc = 10,
+    method = "average",
+    index="all"
+    )
+```
+
+```{r}
+nbclust_centroids <- data %>% 
+  NbClust(
+    distance="euclidean",
+    min.nc = 2,
+    max.nc = 10,
+    method = "centroids",
+    index="all"
+    )
+```
+
+
+We can also run `NbClust` with the `kmeans` algorithm:
+
+```{r}
+nbclust_kmeans <- data %>% 
+  NbClust(
+    distance="euclidean",
+    min.nc = 2,
+    max.nc = 10,
+    method = "kmeans",
+    index="all"
+    )
 ```
